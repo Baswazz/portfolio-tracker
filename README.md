@@ -1,5 +1,5 @@
 # Getting Started
-Crypto portfolio tracker for Google Sheets
+Crypto portfolio tracker for Google Sheets.
 Get your free API key from https://p.nomics.com/pricing
 
 ## How to Install
