@@ -80,6 +80,6 @@ function fetchData() {
 
 function createTimeDrivenTriggers() {
   // Create a time-driven triggers
-  ScriptApp.newTrigger("getcoins").forSpreadsheet(sheet).onOpen().create();
-  ScriptApp.newTrigger("getCoins").timeBased().everyMinutes(autoUpdate).create();
+  ScriptApp.newTrigger("fetchData").forSpreadsheet(sheet).onOpen().create();
+  ScriptApp.newTrigger("fetchData").timeBased().everyMinutes(autoUpdate).create();
 }
