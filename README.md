@@ -4,7 +4,7 @@ Get your free API key from https://p.nomics.com/pricing
 
 ## How to Install
 1. Open Google Sheets.
-2. Go to `Tools` › `Script editor`
+2. Go to `Extensions` › `Apps Script`
 3. Copy the content of portfolio-tracker.gs and paste it in the script editor (replace any existing content).
 4. Don't forget to set your API Key!
 5. Save the script with `File` › `Save`, name it porftolio-tracker or something creative.
