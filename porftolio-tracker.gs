@@ -43,7 +43,8 @@ function fetchData() {
     "&ids=" +
     sheetIds.toString() +
     "&convert=" +
-    currency;
+    currency +
+    "&per-page=100";
   const response = UrlFetchApp.fetch(url);
   const data = JSON.parse(response.getContentText());
 
