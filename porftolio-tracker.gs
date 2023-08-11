@@ -1,26 +1,34 @@
 /**
  * CODE LICENSED UNDER THE CREATIVE COMMON BY-NC-ND LICENSE.
  * https://creativecommons.org/licenses/by-nc-nd/4.0/
- * 
- * Copyright 2021 by Baswazz
+ *
+ * Copyright 2023 by Baswazz
  */
- 
+
 /** @OnlyCurrentDoc */
-const sheet = SpreadsheetApp.getActive();
-const currency = "EUR"; // USD
-const apiKey = ""; // Get your free API Key https://p.nomics.com/pricing
-const autoUpdate = 15; // Minutes
+const updateIntervalInHours = 1; // Minutes
+const currency = "USD"; // USD
+const apiKey = PropertiesService.getScriptProperties().getProperty("apiKey"); // Get your free API Key https://coinmarketcap.com/api/
+const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
+const sheet = SpreadsheetApp.getActiveSheet();
+const idRange = "A2:A"; // Currency symbol
+const symbols = sheet
+  .getRange(idRange)
+  .getValues()
+  .flat()
+  .filter((id) => id !== "");
 
 // Sheet columns
-const idRange = "A2:A"; // Currency ticker Column
 const sheetColName = "B"; // Currency name
 const sheetColPrice = "C"; // Currency price
-const sheetCol1d = "D"; // Currency price change 1d
-const sheetCol7d = "E"; // Currency price change 7d
-const sheetCol30d = "F"; // Currency price change 30d
-const sheetCol365d = "G"; // Currency price change 1 year
-const sheetColYtd = "H"; // Currency price change Ytd
-const sheetColMktCap = "I"; // Currency Market Cap
+const sheetColPercentChange1h = "D"; // Currency price change 1h
+const sheetColPercentChange24h = "E"; // Currency price change 24h
+const sheetColPercentChange7d = "F"; // Currency price change 7d
+const sheetColPercentChang30d = "G"; // Currency price change 30d
+const sheetColPercentChang60d = "H"; // Currency price change 60d
+const sheetColPercentChang90d = "I"; // Currency price change 90d
+const sheetColMarketCap = "J"; // Currency Market Cap
+// const sheetColMarketCapDominance = "K"; // Currency Market Cap Dominance
 
 function onOpen() {
   // Add UI menu
@@ -32,55 +40,80 @@ function onOpen() {
 }
 
 function fetchData() {
-  // Get ids from sheet
-  let sheetIds = sheet.getRange(idRange).getValues();
-  sheetIds = sheetIds.filter(String);
-
-  // Fetch data
+  const headers = {
+    "X-CMC_PRO_API_KEY": apiKey,
+  };
   const url =
-    "https://api.nomics.com/v1/currencies/ticker?key=" +
-    apiKey +
-    "&ids=" +
-    sheetIds.toString() +
+    "https://pro-api.coinmarketcap.com/v2/cryptocurrency/quotes/latest?symbol=" +
+    symbols +
     "&convert=" +
-    currency +
-    "&per-page=100";
-  const response = UrlFetchApp.fetch(url);
-  const data = JSON.parse(response.getContentText());
+    currency;
+  // const url = "https://sandbox-api.coinmarketcap.com/v2/cryptocurrency/quotes/latest?symbol=" + symbols + "&convert=" + currency;
+  const response = UrlFetchApp.fetch(url, { headers });
+  const responseContent = response.getContentText();
+  const data = JSON.parse(responseContent);
 
-  // Add data to sheet
-  sheetIds.forEach(function (sheetId, index) {
-    data.forEach(function (currency) {
-      if (currency.id == sheetId) {
-        sheet.getRange(sheetColName + (index + 2)).setValue(currency.name);
+  dataToSheet(data);
+}
+
+function dataToSheet(data) {
+  const coins = data.data;
+
+  for (const symbol in coins) {
+    if (coins.hasOwnProperty(symbol)) {
+      const coin = coins[symbol][0];
+      const rowIndex = symbols.indexOf(symbol) + 2; // Adding 2 to match sheet row index
+
+      // Write data to the corresponding row
+      if (sheetColName)
+        sheet.getRange(sheetColName + rowIndex).setValue(coin.name);
+      if (sheetColPrice)
         sheet
-          .getRange(sheetColPrice + (index + 2))
-          .setValue(parseFloat(currency.price));
+          .getRange(sheetColPrice + rowIndex)
+          .setValue(parseFloat(coin.quote[currency].price));
+      if (sheetColPercentChange1h)
         sheet
-          .getRange(sheetCol1d + (index + 2))
-          .setValue(parseFloat(currency["1d"].price_change_pct));
+          .getRange(sheetColPercentChange1h + rowIndex)
+          .setValue(parseFloat(coin.quote[currency].percent_change_1h));
+      if (sheetColPercentChange24h)
         sheet
-          .getRange(sheetCol7d + (index + 2))
-          .setValue(parseFloat(currency["7d"].price_change_pct));
+          .getRange(sheetColPercentChange24h + rowIndex)
+          .setValue(parseFloat(coin.quote[currency].percent_change_24h));
+      if (sheetColPercentChange7d)
         sheet
-          .getRange(sheetCol30d + (index + 2))
-          .setValue(parseFloat(currency["30d"].price_change_pct));
+          .getRange(sheetColPercentChange7d + rowIndex)
+          .setValue(parseFloat(coin.quote[currency].percent_change_7d));
+      if (sheetColPercentChang30d)
         sheet
-          .getRange(sheetCol365d + (index + 2))
-          .setValue(parseFloat(currency["365d"].price_change_pct));
+          .getRange(sheetColPercentChang30d + rowIndex)
+          .setValue(parseFloat(coin.quote[currency].percent_change_30d));
+      if (sheetColPercentChang60d)
         sheet
-          .getRange(sheetColYtd + (index + 2))
-          .setValue(parseFloat(currency["ytd"].price_change_pct));
+          .getRange(sheetColPercentChang60d + rowIndex)
+          .setValue(parseFloat(coin.quote[currency].percent_change_60d));
+      if (sheetColPercentChang90d)
         sheet
-          .getRange(sheetColMktCap + (index + 2))
-          .setValue(parseFloat(currency.market_cap));
-      }
-    });
-  });
+          .getRange(sheetColPercentChang90d + rowIndex)
+          .setValue(parseFloat(coin.quote[currency].percent_change_90d));
+      if (sheetColMarketCap)
+        sheet
+          .getRange(sheetColMarketCap + rowIndex)
+          .setValue(parseFloat(coin.quote[currency].market_cap));
+      if (sheetColMarketCapDominance)
+        sheet
+          .getRange(sheetColMarketCapDominance + rowIndex)
+          .setValue(parseFloat(coin.quote[currency].market_cap_dominance));
+    }
+  }
 }
 
 function createTimeDrivenTriggers() {
-  // Create a time-driven triggers
-  ScriptApp.newTrigger("fetchData").forSpreadsheet(sheet).onOpen().create();
-  ScriptApp.newTrigger("fetchData").timeBased().everyMinutes(autoUpdate).create();
+  ScriptApp.newTrigger("fetchData")
+    .forSpreadsheet(spreadsheet)
+    .onOpen()
+    .create();
+  ScriptApp.newTrigger("fetchData")
+    .timeBased()
+    .everyHours(updateIntervalInHours)
+    .create();
 }
