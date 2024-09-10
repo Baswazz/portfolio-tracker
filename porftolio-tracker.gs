@@ -40,6 +40,7 @@ function onOpen() {
 function fetchData() {
   const headers = {
     "X-CMC_PRO_API_KEY": apiKey,
+    Accept: "application/json",
   };
   const url =
     "https://pro-api.coinmarketcap.com/v2/cryptocurrency/quotes/latest?symbol=" +
