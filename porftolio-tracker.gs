@@ -2,7 +2,7 @@
  * CODE LICENSED UNDER THE CREATIVE COMMON BY-NC-ND LICENSE.
  * https://creativecommons.org/licenses/by-nc-nd/4.0/
  *
- * Copyright 2024 by Baswazz
+ * Copyright 2021 by Baswazz
  */
 
 /** @OnlyCurrentDoc */
@@ -22,6 +22,8 @@ const sheetColPercentChange60d = "I";
 const sheetColPercentChange90d = "J";
 const sheetColMarketCap = "K";
 const sheetColMarketCapDominance = "L";
+const sheetColVolume24h = "M";
+const sheetColVolumeChange24h = "N";
 const symbols = sheet
   .getRange(sheetColSymbol)
   .getValues()
@@ -120,6 +122,16 @@ function dataToSheet(data) {
           .setValue(
             parseFloat(coin.quote[currency].market_cap_dominance) / 100
           );
+      }
+      if (sheetColVolume24h) {
+        sheet
+          .getRange(sheetColVolume24h + rowIndex)
+          .setValue(parseFloat(coin.quote[currency].volume_24h));
+      }
+      if (sheetColVolumeChange24h) {
+        sheet
+          .getRange(sheetColVolumeChange24h + rowIndex)
+          .setValue(parseFloat(coin.quote[currency].volume_change_24h) / 100);
       }
     }
   }
