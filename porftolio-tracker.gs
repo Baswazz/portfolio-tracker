@@ -2,7 +2,7 @@
  * CODE LICENSED UNDER THE CREATIVE COMMON BY-NC-ND LICENSE.
  * https://creativecommons.org/licenses/by-nc-nd/4.0/
  *
- * Copyright 2021 by Baswazz
+ * Copyright 2024 by Baswazz
  */
 
 /** @OnlyCurrentDoc */
@@ -11,12 +11,22 @@ const currency = "EUR"; // USD
 const apiKey = PropertiesService.getScriptProperties().getProperty("apiKey"); // Get your free API Key https://coinmarketcap.com/api/
 const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
 const sheet = SpreadsheetApp.getActiveSheet();
-const idRange = "A2:A"; // Currency symbol
+const sheetColSymbol = "B2:B"; // Currency symbol
+const sheetColCoinName = "A";
+const sheetColPrice = "D";
+const sheetColPercentChange1h = "E";
+const sheetColPercentChange24h = "F";
+const sheetColPercentChange7d = "G";
+const sheetColPercentChange30d = "H";
+const sheetColPercentChange60d = "I";
+const sheetColPercentChange90d = "J";
+const sheetColMarketCap = "K";
+const sheetColMarketCapDominance = "L";
 const symbols = sheet
-  .getRange(idRange)
+  .getRange(sheetColSymbol)
   .getValues()
   .flat()
-  .filter((id) => id !== "");
+  .filter(Boolean);
 
 function onOpen() {
   // Add UI menu
@@ -33,15 +43,22 @@ function fetchData() {
   };
   const url =
     "https://pro-api.coinmarketcap.com/v2/cryptocurrency/quotes/latest?symbol=" +
-    symbols +
+    symbols.join(",") +
     "&convert=" +
     currency;
-  // const url = "https://sandbox-api.coinmarketcap.com/v2/cryptocurrency/quotes/latest?symbol=" + symbols + "&convert=" + currency;
-  const response = UrlFetchApp.fetch(url, { headers });
-  const responseContent = response.getContentText();
-  const data = JSON.parse(responseContent);
 
-  dataToSheet(data);
+  try {
+    const response = UrlFetchApp.fetch(url, { headers });
+    if (response.getResponseCode() === 200) {
+      const responseContent = response.getContentText();
+      const data = JSON.parse(responseContent);
+      dataToSheet(data);
+    } else {
+      Logger.log("Error: " + response.getResponseCode());
+    }
+  } catch (e) {
+    Logger.log("Exception: " + e.toString());
+  }
 }
 
 function dataToSheet(data) {
@@ -53,34 +70,56 @@ function dataToSheet(data) {
       const rowIndex = symbols.indexOf(symbol) + 2; // Adding 2 to match sheet row index
 
       // Write data to the corresponding row
-      sheet.getRange("B" + rowIndex).setValue(coin.name);
-      sheet
-        .getRange("C" + rowIndex)
-        .setValue(parseFloat(coin.quote[currency].price));
-      sheet
-        .getRange("D" + rowIndex)
-        .setValue(parseFloat(coin.quote[currency].percent_change_1h));
-      sheet
-        .getRange("E" + rowIndex)
-        .setValue(parseFloat(coin.quote[currency].percent_change_24h));
-      sheet
-        .getRange("F" + rowIndex)
-        .setValue(parseFloat(coin.quote[currency].percent_change_7d));
-      sheet
-        .getRange("G" + rowIndex)
-        .setValue(parseFloat(coin.quote[currency].percent_change_30d));
-      sheet
-        .getRange("H" + rowIndex)
-        .setValue(parseFloat(coin.quote[currency].percent_change_60d));
-      sheet
-        .getRange("I" + rowIndex)
-        .setValue(parseFloat(coin.quote[currency].percent_change_90d));
-      sheet
-        .getRange("J" + rowIndex)
-        .setValue(parseFloat(coin.quote[currency].market_cap));
-      sheet
-        .getRange("K" + rowIndex)
-        .setValue(parseFloat(coin.quote[currency].market_cap_dominance));
+      if (sheetColCoinName) {
+        sheet.getRange(sheetColCoinName + rowIndex).setValue(coin.name);
+      }
+      if (sheetColPrice) {
+        sheet
+          .getRange(sheetColPrice + rowIndex)
+          .setValue(parseFloat(coin.quote[currency].price));
+      }
+      if (sheetColPercentChange1h) {
+        sheet
+          .getRange(sheetColPercentChange1h + rowIndex)
+          .setValue(parseFloat(coin.quote[currency].percent_change_1h) / 100);
+      }
+      if (sheetColPercentChange24h) {
+        sheet
+          .getRange(sheetColPercentChange24h + rowIndex)
+          .setValue(parseFloat(coin.quote[currency].percent_change_24h) / 100);
+      }
+      if (sheetColPercentChange7d) {
+        sheet
+          .getRange(sheetColPercentChange7d + rowIndex)
+          .setValue(parseFloat(coin.quote[currency].percent_change_7d) / 100);
+      }
+      if (sheetColPercentChange30d) {
+        sheet
+          .getRange(sheetColPercentChange30d + rowIndex)
+          .setValue(parseFloat(coin.quote[currency].percent_change_30d) / 100);
+      }
+      if (sheetColPercentChange60d) {
+        sheet
+          .getRange(sheetColPercentChange60d + rowIndex)
+          .setValue(parseFloat(coin.quote[currency].percent_change_60d) / 100);
+      }
+      if (sheetColPercentChange90d) {
+        sheet
+          .getRange(sheetColPercentChange90d + rowIndex)
+          .setValue(parseFloat(coin.quote[currency].percent_change_90d) / 100);
+      }
+      if (sheetColMarketCap) {
+        sheet
+          .getRange(sheetColMarketCap + rowIndex)
+          .setValue(parseFloat(coin.quote[currency].market_cap));
+      }
+      if (sheetColMarketCapDominance) {
+        sheet
+          .getRange(sheetColMarketCapDominance + rowIndex)
+          .setValue(
+            parseFloat(coin.quote[currency].market_cap_dominance) / 100
+          );
+      }
     }
   }
 }
